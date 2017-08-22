@@ -13,14 +13,24 @@ from .models import Order, Product
 
 # Create your views here.
 
-class CartDetailFromRequest(generic.DetailView):
+class CartDetailMixin(object):
     def get_object(self):
         return self.request.cart
+
+class CartDetailFromRequest(CartDetailMixin, generic.DetailView):
+    pass
+
+class CartDelete(CartDetailMixin, generic.DeleteView):
+    def get_success_url(self):
+        messages.warning(self.request, '已清空購物車')
+        return reverse('cart_detail')
+
+    def get(self, request, *args, **kwargs):
+        return redirect('cart_detail')
 
 class OrderDetailMixin(object):
     def get_object(self):
         return get_object_or_404(self.request.user.order_set, token=uuid.UUID(self.kwargs.get('token')))
-
 
 class OrderDetail(OrderDetailMixin, LoginRequiredMixin, generic.DetailView):
     pass
